@@ -1,0 +1,105 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<div class="container">
+    <div class="col-md-6">
+        <div class="row">
+            <h2>
+                Select a file
+            </h2>
+            <div class="col">
+                <label id="text">No file selected.</label>
+            </div>
+            <div class="col">
+                <div class="fileUpload btn btn-primary">
+                    <span>Choose</span>
+                    <input type="file" class="upload" id="uploadFile" />
+                </div>
+            </div>
+            <div class="col">
+                <button id="submit" class="btn btn-primary" disabled>Upload</button>
+            </div>
+            <div class="col">
+                <button id="reset" class="btn btn-danger">Reset</button>
+            </div>
+        </div>
+        <div class="row">
+            <select id="select">
+                @foreach (var item in ViewBag.List)
+            {
+                <option value=" @item.Key">@item.Value</option>
+        }
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h2>
+            There will be information about file
+        </h2>
+        <div class="col" id="info">
+
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts{
+    <script type="text/javascript">
+
+        $('#uploadFile').on('change', function () {
+            var o = this.value || 'No file selected.';
+            $('#text').text(o);
+            $('#submit').removeAttr('disabled');
+        });
+
+        $('#reset').on('click', function (e) {
+            $('#uploadFile').val("");
+            $('#text').text("No file selected.");
+            $('#submit').attr('disabled', true);
+        });
+
+
+    $('#submit').on('click', function (e) {
+        e.preventDefault();
+        var files = document.getElementById('uploadFile').files;
+        var action = document.getElementById('select').value;
+        $('#submit').attr('disabled', true);
+        if (files.length > 0) {
+            if (window.FormData !== undefined) {
+                var data = new FormData();
+                for (var x = 0; x < files.length; x++) {
+                    data.append("file" + x, files[x]);
+                    console.log(files[x]);
+                }
+                data.append("action", action);
+
+                //console.log(action);
+                //console.log(data.get("action"));
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("Upload", "Home")',
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (result) {
+                        $('#info').empty();
+                        for (let i = 0; i < result.length; ++i) {
+                            $('#info').append("<p>",result[i],"</p>");
+                        }                       
+                        //console.log(result);
+                    },
+                    error: function (xhr, status, p3) {
+                        $('#info').empty();
+                        $('#info').text(xhr.responseText);
+                    }
+                });
+            } else {
+                $('#info').empty();
+                $('#info').text("The browser does not support uploading files HTML5!");
+            }
+        }
+        });
+    </script>
+}
